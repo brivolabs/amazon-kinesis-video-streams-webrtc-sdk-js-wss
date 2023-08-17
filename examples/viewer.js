@@ -37,10 +37,19 @@ let videoBitRateArray = [];
 let audioRateArray = [];
 let timeArray = [];
 
+function getRegionFromARN(string, phrase) {
+    const regex = new RegExp(`${phrase}([^:]+)`);
+    const match = string.match(regex);
+return match ? match[1] : null;
+}
+
 async function startViewer(localView, remoteView, formValues, onStatsReport, onRemoteDataMessage) {
     try {
         console.log('[VIEWER] Client id is:', formValues.clientId);
-
+        const wssUrl = new URL(formValues.endpoint);
+        const params = Object.fromEntries(new URLSearchParams(wssUrl.search));
+        const channelARN = params["X-Amz-ChannelARN"];
+        const region = getRegionFromARN(channelARN, "arn:aws:kinesisvideo:");
         viewer.localView = localView;
         viewer.remoteView = remoteView;
 
@@ -107,87 +116,18 @@ async function startViewer(localView, remoteView, formValues, onStatsReport, onR
             });
         }
 
-        // Create KVS client
-        const kinesisVideoClient = new AWS.KinesisVideo({
-            region: formValues.region,
-            accessKeyId: formValues.accessKeyId,
-            secretAccessKey: formValues.secretAccessKey,
-            sessionToken: formValues.sessionToken,
-            endpoint: formValues.endpoint,
-            correctClockSkew: true,
-        });
-
-        // Get signaling channel ARN
-        const describeSignalingChannelResponse = await kinesisVideoClient
-            .describeSignalingChannel({
-                ChannelName: formValues.channelName,
-            })
-            .promise();
-        const channelARN = describeSignalingChannelResponse.ChannelInfo.ChannelARN;
         console.log('[VIEWER] Channel ARN:', channelARN);
 
-        // Get signaling channel endpoints
-        const getSignalingChannelEndpointResponse = await kinesisVideoClient
-            .getSignalingChannelEndpoint({
-                ChannelARN: channelARN,
-                SingleMasterChannelEndpointConfiguration: {
-                    Protocols: ['WSS', 'HTTPS'],
-                    Role: KVSWebRTC.Role.VIEWER,
-                },
-            })
-            .promise();
-        const endpointsByProtocol = getSignalingChannelEndpointResponse.ResourceEndpointList.reduce((endpoints, endpoint) => {
-            endpoints[endpoint.Protocol] = endpoint.ResourceEndpoint;
-            return endpoints;
-        }, {});
-        console.log('[VIEWER] Endpoints:', endpointsByProtocol);
-
-        const kinesisVideoSignalingChannelsClient = new AWS.KinesisVideoSignalingChannels({
-            region: formValues.region,
-            accessKeyId: formValues.accessKeyId,
-            secretAccessKey: formValues.secretAccessKey,
-            sessionToken: formValues.sessionToken,
-            endpoint: endpointsByProtocol.HTTPS,
-            correctClockSkew: true,
-        });
-
-        // Get ICE server configuration
-        const getIceServerConfigResponse = await kinesisVideoSignalingChannelsClient
-            .getIceServerConfig({
-                ChannelARN: channelARN,
-            })
-            .promise();
-        const iceServers = [];
-        // Don't add stun if user selects TURN only or NAT traversal disabled
-        if (!formValues.natTraversalDisabled && !formValues.forceTURN) {
-            iceServers.push({ urls: `stun:stun.kinesisvideo.${formValues.region}.amazonaws.com:443` });
-        }
-
-        // Don't add turn if user selects STUN only or NAT traversal disabled
-        if (!formValues.natTraversalDisabled && !formValues.forceSTUN) {
-            getIceServerConfigResponse.IceServerList.forEach(iceServer =>
-                iceServers.push({
-                    urls: iceServer.Uris,
-                    username: iceServer.Username,
-                    credential: iceServer.Password,
-                }),
-            );
-        }
-        console.log('[VIEWER] ICE servers:', iceServers);
+        // Get signaling channel endpoin
 
         // Create Signaling Client
         viewer.signalingClient = new KVSWebRTC.SignalingClient({
+            requestSigner: {getSignedURL: () => Promise.resolve(wssUrl)},
             channelARN,
-            channelEndpoint: endpointsByProtocol.WSS,
+            channelEndpoint: 'irrelevant because signedURL is used',
             clientId: formValues.clientId,
             role: KVSWebRTC.Role.VIEWER,
-            region: formValues.region,
-            credentials: {
-                accessKeyId: formValues.accessKeyId,
-                secretAccessKey: formValues.secretAccessKey,
-                sessionToken: formValues.sessionToken,
-            },
-            systemClockOffset: kinesisVideoClient.config.systemClockOffset,
+            region: region,
         });
 
         const resolution = formValues.widescreen
@@ -201,7 +141,6 @@ async function startViewer(localView, remoteView, formValues, onStatsReport, onR
             audio: formValues.sendAudio,
         };
         const configuration = {
-            iceServers,
             iceTransportPolicy: formValues.forceTURN ? 'relay' : 'all',
         };
         viewer.peerConnection = new RTCPeerConnection(configuration);

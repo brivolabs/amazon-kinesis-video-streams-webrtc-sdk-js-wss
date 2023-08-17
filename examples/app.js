@@ -69,9 +69,7 @@ function getRandomClientId() {
 
 function getFormValues() {
     return {
-        region: $('#region').val(),
-        channelName: $('#channelName').val(),
-        clientId: $('#clientId').val() || getRandomClientId(),
+        clientId: getRandomClientId(),
         sendVideo: $('#sendVideo').is(':checked'),
         sendAudio: $('#sendAudio').is(':checked'),
         openDataChannel: $('#openDataChannel').is(':checked'),
@@ -81,10 +79,7 @@ function getFormValues() {
         natTraversalDisabled: $('#natTraversalDisabled').is(':checked'),
         forceSTUN: $('#forceSTUN').is(':checked'),
         forceTURN: $('#forceTURN').is(':checked'),
-        accessKeyId: $('#accessKeyId').val(),
         endpoint: $('#endpoint').val() || null,
-        secretAccessKey: $('#secretAccessKey').val(),
-        sessionToken: $('#sessionToken').val() || null,
         ingestMedia: $('#ingestMedia').is(':checked'),
         enableDQPmetrics: $('#enableDQPmetrics').is(':checked'),
     };
