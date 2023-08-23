@@ -16,18 +16,44 @@
     <link rel="icon" type="image/png" href="favicon.ico">
 </head>
 <body>
-
-<div class="container mt-3">
     <h1>KVS WebRTC Test Page</h1>
     <p>This is the KVS Signaling Channel WebRTC test page. Use this page to connect to a signaling channel as either the MASTER or as a VIEWER.</p>
-
+    <h2 id="fetchingWssUrl" class="d-none">Fetching WSS Url...</h2>
+    <p id="retrievedWssUrl"></p>
+<div class="container mt-3">
+    <form id="wssForm" onsubmit="return false">
+        <hr>
+        <h4>WSS URL Generator</h4>
+        <div class="form-group">
+            <label for="sourceURL">Source URL</label>
+            <input type="text" class="form-control" id="sourceURL" placeholder="" value="http://localhost:3060" required>
+        </div>
+        <div class="form-group has-validation" style="position: relative;">
+            <label for="wssRegion">Region</label>
+            <input type="text" class="form-control valid" id="wssRegion" placeholder="Region" value="us-east-1" autocomplete="off" required>
+            <datalist id="regionList"></datalist>
+            <div id="region-invalid-feedback" class="invalid-feedback"></div>
+        </div>
+        <div class="form-group">
+            <label for="wssChannelName">Channel Name</label>
+            <input type="text" class="form-control" id="wssChannelName" placeholder="" value="test-device" required>
+        </div>
+        <div class="form-group has-validation" style="position: relative;">
+            <label for="wssAuthToken">Graphql Auth Token</label>
+            <textarea type="text" class="form-control" id="wssAuthToken" placeholder="" ></textarea>
+        </div>
+        <div>
+            <button id="wssUrl-button" type="submit" class="btn btn-primary">Start Viewer</button>
+        </div>
+    </form>
+    <hr>
     <div class="row loader"></div>
     <div id="main" class="d-none">
         <form id="form" onsubmit="return false">
             <h4>KVS Endpoint</h4>
             <div class="form-group has-validation" style="position: relative;">
                 <label for="region">Region</label>
-                <input type="text" class="form-control valid" id="region" placeholder="Region" value="us-west-2" autocomplete="off" required>
+                <input type="text" class="form-control valid" id="region" placeholder="Region" value="us-east-1" autocomplete="off" required>
                 <datalist id="regionList"></datalist>
                 <div id="region-invalid-feedback" class="invalid-feedback"></div>
             </div>
@@ -287,7 +313,7 @@
 
 <div id="test"></div>
 
-<script src="../kvs-webrtc.js"></script>
+<script src="https://unpkg.com/amazon-kinesis-video-streams-webrtc/dist/kvs-webrtc.min.js" ></script>
 <script src="./master.js"></script>
 <script src="./viewer.js"></script>
 <script src="./createSignalingChannel.js"></script>

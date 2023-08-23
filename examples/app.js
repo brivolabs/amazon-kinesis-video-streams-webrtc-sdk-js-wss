@@ -123,6 +123,7 @@ function onStop() {
     }
 
     $('#form').removeClass('d-none');
+    $('#wssForm').removeClass('d-none');
     ROLE = null;
 }
 
@@ -168,8 +169,8 @@ $('#master-button').click(async () => {
 
 function printFormValues(formValues) {
     const copyOfForm = Object.assign({}, formValues);
-    copyOfForm.accessKeyId = copyOfForm.accessKeyId.replace(/./g, '*');
-    copyOfForm.secretAccessKey = copyOfForm.secretAccessKey.replace(/./g, '*');
+    copyOfForm.accessKeyId = copyOfForm.accessKeyId?.replace(/./g, '*');
+    copyOfForm.secretAccessKey = copyOfForm.secretAccessKey?.replace(/./g, '*');
     copyOfForm.sessionToken = copyOfForm.sessionToken?.replace(/./g, '*');
     console.log('[FORM_VALUES] Running the sample with the following options:', copyOfForm);
 }
@@ -260,6 +261,66 @@ async function logLevelSelected(event) {
         }
     });
 }
+
+$('#wssUrl-button').click(async () => {
+    const form = $('#wssForm');
+    if (!form[0].checkValidity()) {
+        return;
+    }
+    ROLE = 'viewer';
+
+    const localView = $('#viewer .local-view')[0];
+    const remoteView = $('#viewer .remote-view')[0];
+    const localMessage = $('#viewer .local-message')[0];
+    const remoteMessage = $('#viewer .remote-message')[0];
+    const sourceURL = $('#sourceURL').val();
+    const formValues = {
+        region: $('#wssRegion').val(),
+        channelName: $('#wssChannelName').val(),
+        }
+    const authToken = $('#wssAuthToken').val().replace(/\s+/g, '');
+    /*
+    if (formValues.enableDQPmetrics) {
+        $('#dqpmetrics').removeClass('d-none');
+        $('#webrtc-live-stats').removeClass('d-none');
+    }
+    toggleDataChannelElements();
+    */
+    $(remoteMessage).empty();
+    localMessage.value = '';
+
+    const targetUrl = `${sourceURL}/api/video-services/video-call/connect`;
+    const query = new URLSearchParams(formValues);
+    $('#fetchingWssUrl').removeClass('d-none');
+    fetch(`${targetUrl}?${query}`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${authToken}`
+            }
+    }).then(res => {
+        $('#fetchingWssUrl').addClass('d-none');
+        if (res.ok) {
+            return res.json()
+        } else {
+            return Promise.reject(`${res.status}: ${res.statusText}`);
+        }
+        }).then(data => {
+            formValues.clientId = getRandomClientId();
+            const urlForFrontend = data.wss.replace(/\?/g, '?<br>').replace(/&/g, '&<br>');
+            $('#retrievedWssUrl').html("Retrieved WSS URL: <br>" + urlForFrontend);
+            formValues.wssUrl = data.wss;
+            formValues.iceServers = data.ice;
+            startViewer(localView, remoteView, formValues, onStatsReport, event => {
+                remoteMessage.append(`${event.data}\n`);
+            });
+    }).catch(err => {
+        console.error("ERROR", err)
+    })
+    
+    form.addClass('d-none');
+    $('#form').addClass('d-none');
+    $('#viewer').removeClass('d-none');
+});
 
 // Fetch regions
 fetch('https://api.regional-table.region-services.aws.a2z.com/index.jsons')
