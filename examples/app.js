@@ -88,6 +88,7 @@ function getFormValues() {
         secretAccessKey: $('#secretAccessKey').val(),
         sessionToken: $('#sessionToken').val() || null,
         enableDQPmetrics: $('#enableDQPmetrics').is(':checked'),
+        signedUrl: $('#signedUrl').val() || null,
     };
 }
 
@@ -172,6 +173,7 @@ function printFormValues(formValues) {
     copyOfForm.accessKeyId = copyOfForm.accessKeyId?.replace(/./g, '*');
     copyOfForm.secretAccessKey = copyOfForm.secretAccessKey?.replace(/./g, '*');
     copyOfForm.sessionToken = copyOfForm.sessionToken?.replace(/./g, '*');
+    // copyOfForm.signedUrl = copyOfForm.signedUrl?.replace(/./g, '*');
     console.log('[FORM_VALUES] Running the sample with the following options:', copyOfForm);
 }
 
@@ -187,6 +189,7 @@ $('#viewer-button').click(async () => {
         return;
     }
     ROLE = 'viewer';
+    $('#wssForm').addClass('d-none');
     form.addClass('d-none');
     $('#viewer').removeClass('d-none');
 
@@ -306,8 +309,9 @@ $('#wssUrl-button').click(async () => {
         }
         }).then(data => {
             formValues.clientId = getRandomClientId();
-            const urlForFrontend = data.wss.replace(/\?/g, '?<br>').replace(/&/g, '&<br>');
-            $('#retrievedWssUrl').html("Retrieved WSS URL: <br>" + urlForFrontend);
+            formValues.useTrickleICE = true;
+            //const urlForFrontend = data.wss.replace(/\?/g, '?<br>').replace(/&/g, '&<br>');
+            //$('#retrievedWssUrl').html("Retrieved WSS URL: <br>" + urlForFrontend);
             formValues.wssUrl = data.wss;
             formValues.iceServers = data.ice;
             startViewer(localView, remoteView, formValues, onStatsReport, event => {
@@ -471,6 +475,7 @@ const fields = [
     { field: 'forceSTUN', type: 'radio', name: 'natTraversal' },
     { field: 'forceTURN', type: 'radio', name: 'natTraversal' },
     { field: 'natTraversalDisabled', type: 'radio', name: 'natTraversal' },
+    { field: 'signedUrl', type: 'text' },
 ];
 fields.forEach(({ field, type, name }) => {
     const id = '#' + field;

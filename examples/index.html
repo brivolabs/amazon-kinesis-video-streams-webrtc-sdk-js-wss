@@ -43,13 +43,18 @@
             <textarea type="text" class="form-control" id="wssAuthToken" placeholder="" ></textarea>
         </div>
         <div>
-            <button id="wssUrl-button" type="submit" class="btn btn-primary">Start Viewer</button>
+            <button id="wssUrl-button" type="submit" class="btn btn-primary">Get WSS URL and Start Viewer</button>
         </div>
     </form>
     <hr>
     <div class="row loader"></div>
     <div id="main" class="d-none">
         <form id="form" onsubmit="return false">
+            <h4>Signed WSS URL</h4>
+            <div class="form-group">
+                <label for="signedUrl">Signed Endpoint <small>(Using this will override the SignalingClient from using the AWS credentials)</small></label>
+                <input type="text" class="form-control" id="signedUrl" placeholder="Signed WSS URL">
+            </div>
             <h4>KVS Endpoint</h4>
             <div class="form-group has-validation" style="position: relative;">
                 <label for="region">Region</label>

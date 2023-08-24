@@ -39,8 +39,6 @@ let timeArray = [];
 
 async function startViewer(localView, remoteView, formValues, onStatsReport, onRemoteDataMessage) {
     try {
-        console.log('[VIEWER] Client id is:', formValues.clientId);
-
         viewer.localView = localView;
         viewer.remoteView = remoteView;
         const iceServers = [];
@@ -107,24 +105,26 @@ async function startViewer(localView, remoteView, formValues, onStatsReport, onR
             });
         }
         if (formValues.wssUrl) {
+            console.log("GOT THE SIGNED URL, STARTING VIDEO", formValues.wssUrl)
                 iceServers.push(...formValues.iceServers)
                 console.warn("Using endpoint to create signaling client")
                 viewer.signalingClient = new KVSWebRTC.SignalingClient({
                             requestSigner: {getSignedURL: () => Promise.resolve(formValues.wssUrl)},
                             channelARN: "signedUrlResolves",
                             channelEndpoint: "signedUrlResolves",
-                            clientId: formValues.clientId,
+                            clientId: "signedUrlResolves",
                             role: KVSWebRTC.Role.VIEWER,
                             region: "signedUrlResolves",
                         });
         } else {
+            console.log('[VIEWER] Client id is:', formValues.clientId);
             // Create KVS client
             const kinesisVideoClient = new AWS.KinesisVideo({
                 region: formValues.region,
                 accessKeyId: formValues.accessKeyId,
                 secretAccessKey: formValues.secretAccessKey,
                 sessionToken: formValues.sessionToken,
-                //endpoint: formValues.endpoint,
+                endpoint: formValues.endpoint,
                 correctClockSkew: true,
             });
             // Get signaling channel ARN
@@ -200,23 +200,37 @@ async function startViewer(localView, remoteView, formValues, onStatsReport, onR
                     }),
                 );
             }
-            console.log('[VIEWER] ICE servers:', iceServers);
 
             // Create Signaling Client
-            viewer.signalingClient = new KVSWebRTC.SignalingClient({
-                channelARN,
-                channelEndpoint: endpointsByProtocol.WSS,
-                clientId: formValues.clientId,
-                role: KVSWebRTC.Role.VIEWER,
-                region: formValues.region,
-                credentials: {
-                    accessKeyId: formValues.accessKeyId,
-                    secretAccessKey: formValues.secretAccessKey,
-                    sessionToken: formValues.sessionToken,
-                },
-                systemClockOffset: kinesisVideoClient.config.systemClockOffset,
-            });
+            if (formValues.signedUrl !== null) {
+                console.log('[VIEWER] using provided presigned url for signaling channel');
+                viewer.signalingClient = new KVSWebRTC.SignalingClient({
+                    requestSigner: { getSignedURL: () => Promise.resolve(formValues.signedUrl) },
+                    channelARN,
+                    channelEndpoint: endpointsByProtocol.WSS,
+                    clientId: formValues.clientId,
+                    role: KVSWebRTC.Role.VIEWER,
+                    region: formValues.region,
+                    systemClockOffset: kinesisVideoClient.config.systemClockOffset,
+                });
+            } else {
+                console.log('[VIEWER] using form credentials for signaling channel');
+                viewer.signalingClient = new KVSWebRTC.SignalingClient({
+                    channelARN,
+                    channelEndpoint: endpointsByProtocol.WSS,
+                    clientId: formValues.clientId,
+                    role: KVSWebRTC.Role.VIEWER,
+                    region: formValues.region,
+                    credentials: {
+                        accessKeyId: formValues.accessKeyId,
+                        secretAccessKey: formValues.secretAccessKey,
+                        sessionToken: formValues.sessionToken,
+                    },
+                    systemClockOffset: kinesisVideoClient.config.systemClockOffset,
+                });
+            }
         }
+        console.log('[VIEWER] ICE servers:', iceServers);
         const resolution = formValues.widescreen
             ? {
                   width: { ideal: 1280 },
