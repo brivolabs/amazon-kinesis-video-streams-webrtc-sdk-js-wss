@@ -88,6 +88,7 @@ function getFormValues() {
         secretAccessKey: $('#secretAccessKey').val(),
         sessionToken: $('#sessionToken').val() || null,
         enableDQPmetrics: $('#enableDQPmetrics').is(':checked'),
+        signedUrl: $('#signedUrl').val() || null,
     };
 }
 
@@ -123,7 +124,19 @@ function onStop() {
     }
 
     $('#form').removeClass('d-none');
+    $('#wssForm').removeClass('d-none');
     ROLE = null;
+}
+
+function generateObjectFromForm(formContainerId) {
+    const returnObject = {};
+    const rows = $(`.${formContainerId}`);
+    rows.each((i, row) => {
+        const key = $(row).find(".key").val();
+        const value = $(row).find(".value").val();
+        returnObject[key] = value;
+    });
+    return returnObject;
 }
 
 window.addEventListener('beforeunload', onStop);
@@ -168,9 +181,10 @@ $('#master-button').click(async () => {
 
 function printFormValues(formValues) {
     const copyOfForm = Object.assign({}, formValues);
-    copyOfForm.accessKeyId = copyOfForm.accessKeyId.replace(/./g, '*');
-    copyOfForm.secretAccessKey = copyOfForm.secretAccessKey.replace(/./g, '*');
+    copyOfForm.accessKeyId = copyOfForm.accessKeyId?.replace(/./g, '*');
+    copyOfForm.secretAccessKey = copyOfForm.secretAccessKey?.replace(/./g, '*');
     copyOfForm.sessionToken = copyOfForm.sessionToken?.replace(/./g, '*');
+    copyOfForm.signedUrl = copyOfForm.signedUrl?.replace(/(Security-Token=)[^&]*/, "$1******");
     console.log('[FORM_VALUES] Running the sample with the following options:', copyOfForm);
 }
 
@@ -186,6 +200,7 @@ $('#viewer-button').click(async () => {
         return;
     }
     ROLE = 'viewer';
+    $('#wssForm').addClass('d-none');
     form.addClass('d-none');
     $('#viewer').removeClass('d-none');
 
@@ -260,6 +275,72 @@ async function logLevelSelected(event) {
         }
     });
 }
+
+$('#wssUrl-button').click(async () => {
+    const form = $('#wssForm');
+    if (!form[0].checkValidity()) {
+        return;
+    }
+    ROLE = 'viewer';
+
+    const localView = $('#viewer .local-view')[0];
+    const remoteView = $('#viewer .remote-view')[0];
+    const localMessage = $('#viewer .local-message')[0];
+    const remoteMessage = $('#viewer .remote-message')[0];
+    const sourceURL = $('#sourceURL').val();
+
+    try {
+        const formValues = generateObjectFromForm('queryparam-json-row');
+        const headerObject = generateObjectFromForm('header-json-row');
+
+        /*
+        if (formValues.enableDQPmetrics) {
+            $('#dqpmetrics').removeClass('d-none');
+            $('#webrtc-live-stats').removeClass('d-none');
+        }
+        toggleDataChannelElements();
+        */
+        $(remoteMessage).empty();
+        localMessage.value = '';
+
+        const targetUrl = `${sourceURL}`;
+        const query = new URLSearchParams(formValues);
+        $('#fetchingWssUrl').removeClass('d-none');
+        fetch(`${targetUrl}?${query}`, {
+            method: 'GET',
+            headers: headerObject
+        }).then(res => {
+            $('#fetchingWssUrl').addClass('d-none');
+            if (res.ok) {
+                return res.json()
+            } else {
+                return Promise.reject(`${res.status}: ${res.statusText}`);
+            }
+            }).then(data => {
+                formValues.clientId = getRandomClientId();
+                
+                //const urlForFrontend = data.wss.replace(/\?/g, '?<br>').replace(/&/g, '&<br>');
+                //$('#retrievedWssUrl').html("Retrieved WSS URL: <br>" + urlForFrontend);
+                formValues.wssUrl = data.wss;
+                console.log("WSS URL: ", data.wss.replace(/(Security-Token=)[^&]*/, "$1******"));
+                formValues.iceServers = data.ice;
+                formValues.sendVideo = true; // Are these something we'd want the user to opt into / out of?  
+                formValues.sendAudio = true;
+                formValues.useTrickleICE = true;
+                startViewer(localView, remoteView, formValues, onStatsReport, event => {
+                    remoteMessage.append(`${event.data}\n`);
+                });
+        }).catch(err => {
+            console.error("ERROR", err)
+        })
+        
+        form.addClass('d-none');
+        $('#form').addClass('d-none');
+        $('#viewer').removeClass('d-none');
+    } catch (error) {
+        console.error(error);
+    }
+});
 
 // Fetch regions
 fetch('https://api.regional-table.region-services.aws.a2z.com/index.jsons')
@@ -410,6 +491,7 @@ const fields = [
     { field: 'forceSTUN', type: 'radio', name: 'natTraversal' },
     { field: 'forceTURN', type: 'radio', name: 'natTraversal' },
     { field: 'natTraversalDisabled', type: 'radio', name: 'natTraversal' },
+    { field: 'signedUrl', type: 'text' },
 ];
 fields.forEach(({ field, type, name }) => {
     const id = '#' + field;
@@ -491,6 +573,38 @@ $('#update-media-storage-configuration-button').on('click', async function() {
 $('#describe-media-storage-configuration-button').on('click', async function() {
     const formValues = getFormValues();
     describeMediaStorageConfiguration(formValues);
+});
+
+const headerJsonContainer = $("#header-json-container");
+const headerAddBtn = $("#header-json-add");
+
+headerAddBtn.on("click", () => {
+    const row = $(`<div class="header-json-row">
+        <input type="text" placeholder="Key" class="key">
+        <input type="text" placeholder="Value" class="value">
+        <button class="delete">Delete</button>
+    </div>`);
+    headerJsonContainer.append(row);
+});
+
+headerJsonContainer.on("click", ".delete", (e) => {
+    $(e.target).parent().remove();
+});
+
+const queryParamJsonContainer = $("#queryparam-json-container");
+const queryParamAddBtn = $("#queryparam-json-add");
+
+queryParamAddBtn.on("click", () => {
+    const row = $(`<div class="queryparam-json-row">
+        <input type="text" placeholder="Key" class="key">
+        <input type="text" placeholder="Value" class="value">
+        <button class="delete">Delete</button>
+    </div>`);
+    queryParamJsonContainer.append(row);
+});
+
+queryParamJsonContainer .on("click", ".delete", (e) => {
+    $(e.target).parent().remove();
 });
 
 // Enable tooltips

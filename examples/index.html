@@ -16,18 +16,63 @@
     <link rel="icon" type="image/png" href="favicon.ico">
 </head>
 <body>
-
-<div class="container mt-3">
     <h1>KVS WebRTC Test Page</h1>
     <p>This is the KVS Signaling Channel WebRTC test page. Use this page to connect to a signaling channel as either the MASTER or as a VIEWER.</p>
-
+    <h2 id="fetchingWssUrl" class="d-none">Fetching WSS Url...</h2>
+    <p id="retrievedWssUrl"></p>
+<div class="container mt-3">
+    <form id="wssForm" onsubmit="return false">
+        <hr>
+        <h4>WSS URL Generator</h4>
+        <div class="form-group">
+            <label for="sourceURL">Source URL</label>
+            <input type="text" class="form-control" id="sourceURL" placeholder="" value="http://localhost:3060/api/video-services/video-call/connect" required>
+        </div>
+        <div id="queryparam-json-container" style="position: relative;">
+            <label for="queryparam-json">QueryParam JSON Fields <small>Enter the query parameters you'd like to add </small></label>
+            <div class="queryparam-json-row">
+                <input type="text" placeholder="Key" class="key" value="region">
+                <input type="text" placeholder="Value" class="value" value="us-east-1">
+                <button class="delete">Delete</button>
+            </div>
+            <div class="queryparam-json-row">
+                <input type="text" placeholder="Key" class="key" value="channelName">
+                <input type="text" placeholder="Value" class="value" value="test-device">
+                <button class="delete">Delete</button>
+            </div>
+        </div>
+        <button id="queryparam-json-add">Add Key / Value Field</button>
+        <div id="header-json-container" style="position: relative;">
+            <label for="header-json">Header JSON Fields <small>Enter the JSON object that you'd like to send as the header for the GET request</small></label>
+            <div class="header-json-row">
+                <input type="text" placeholder="Key" class="key" value="accept">
+                <input type="text" placeholder="Value" class="value" value="application/json">
+                <button class="delete">Delete</button>
+            </div>
+            <div class="header-json-row">
+                <input type="text" placeholder="Key" class="key" value="Authorization">
+                <input type="text" placeholder="Value" class="value" value="Bearer ">
+                <button class="delete">Delete</button>
+            </div>
+        </div>
+        <button id="header-json-add">Add Key / Value Field</button>
+        <div>
+            <button id="wssUrl-button" type="submit" class="btn btn-primary">Get WSS URL and Start Viewer</button>
+        </div>
+    </form>
+    <hr>
     <div class="row loader"></div>
     <div id="main" class="d-none">
         <form id="form" onsubmit="return false">
+            <h4>Signed WSS URL</h4>
+            <div class="form-group">
+                <label for="signedUrl">Signed Endpoint <small>(Using will override the SignalingClient from using the AWS credentials, but still needs AWS credentials for ICE servers)</small></label>
+                <input type="text" class="form-control" id="signedUrl" placeholder="Signed WSS URL" autocomplete="off">
+            </div>
             <h4>KVS Endpoint</h4>
             <div class="form-group has-validation" style="position: relative;">
                 <label for="region">Region</label>
-                <input type="text" class="form-control valid" id="region" placeholder="Region" value="us-west-2" autocomplete="off" required>
+                <input type="text" class="form-control valid" id="region" placeholder="Region" value="us-east-1" autocomplete="off" required>
                 <datalist id="regionList"></datalist>
                 <div id="region-invalid-feedback" class="invalid-feedback"></div>
             </div>
@@ -287,7 +332,7 @@
 
 <div id="test"></div>
 
-<script src="../kvs-webrtc.js"></script>
+<script src="https://unpkg.com/amazon-kinesis-video-streams-webrtc/dist/kvs-webrtc.min.js" ></script>
 <script src="./master.js"></script>
 <script src="./viewer.js"></script>
 <script src="./createSignalingChannel.js"></script>
