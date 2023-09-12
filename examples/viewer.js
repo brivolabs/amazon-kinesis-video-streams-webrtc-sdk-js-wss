@@ -105,16 +105,16 @@ async function startViewer(localView, remoteView, formValues, onStatsReport, onR
             });
         }
         if (formValues.wssUrl) {
-                iceServers.push(...formValues.iceServers)
-                console.info("Using generated WSS URL to create signaling client")
-                viewer.signalingClient = new KVSWebRTC.SignalingClient({
-                            requestSigner: {getSignedURL: () => Promise.resolve(formValues.wssUrl)},
-                            channelARN: "signedUrlResolves",
-                            channelEndpoint: "signedUrlResolves",
-                            clientId: "signedUrlResolves",
-                            role: KVSWebRTC.Role.VIEWER,
-                            region: "signedUrlResolves",
-                        });
+            iceServers.push(...formValues.iceServers);
+            console.info('Using generated WSS URL to create signaling client');
+            viewer.signalingClient = new KVSWebRTC.SignalingClient({
+                requestSigner: { getSignedURL: () => Promise.resolve(formValues.wssUrl) },
+                channelARN: 'signedUrlResolves',
+                channelEndpoint: 'signedUrlResolves',
+                clientId: 'signedUrlResolves',
+                role: KVSWebRTC.Role.VIEWER,
+                region: 'signedUrlResolves',
+            });
         } else {
             console.log('[VIEWER] Client id is:', formValues.clientId);
             // Create KVS client
@@ -248,7 +248,7 @@ async function startViewer(localView, remoteView, formValues, onStatsReport, onR
             const dataChannelObj = viewer.peerConnection.createDataChannel('kvsDataChannel');
             viewer.dataChannel = dataChannelObj;
             dataChannelObj.onopen = event => {
-                dataChannelObj.send("Opened data channel by viewer");
+                dataChannelObj.send('Opened data channel by viewer');
             };
             // Callback for the data channel created by viewer
             dataChannelObj.onmessage = onRemoteDataMessage;
