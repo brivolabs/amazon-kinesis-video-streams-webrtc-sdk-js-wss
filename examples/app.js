@@ -132,8 +132,12 @@ function generateObjectFromForm(formContainerId) {
     const returnObject = {};
     const rows = $(`.${formContainerId}`);
     rows.each((i, row) => {
-        const key = $(row).find(".key").val();
-        const value = $(row).find(".value").val();
+        const key = $(row)
+            .find('.key')
+            .val();
+        const value = $(row)
+            .find('.value')
+            .val();
         returnObject[key] = value;
     });
     return returnObject;
@@ -179,12 +183,54 @@ $('#master-button').click(async () => {
     });
 });
 
+$('#bds-button-with-notify').click(async () => {
+    initiateMasterStream(true);
+});
+
+$('#bds-button-no-notify').click(async () => {
+    initiateMasterStream(false);
+});
+
+function initiateMasterStream(sendNotification = false) {
+    if (sendNotification) {
+        // TODO: Hit notification endpoint
+    }
+    const form = $('#form');
+
+    if (!form[0].checkValidity()) {
+        return;
+    }
+    ROLE = 'master';
+    form.addClass('d-none');
+    $('#master').removeClass('d-none');
+
+    const localView = $('#master .local-view')[0];
+    const remoteView = $('#viewer-view-holder')[0];
+    const localMessage = {};
+    const remoteMessage = $('#master .remote-message')[0];
+    const formValues = getFormValues();
+    formValues.sendVideo = true;
+    formValues.sendAudio = true;
+    formValues.widescreen = true;
+    formValues.useTrickleICE = true;
+
+    $(remoteMessage).empty();
+    localMessage.value = '';
+    toggleDataChannelElements();
+
+    printFormValues(formValues);
+
+    startMaster(localView, remoteView, formValues, onStatsReport, event => {
+        remoteMessage.append(`${event.data}\n`);
+    });
+}
+
 function printFormValues(formValues) {
     const copyOfForm = Object.assign({}, formValues);
     copyOfForm.accessKeyId = copyOfForm.accessKeyId?.replace(/./g, '*');
     copyOfForm.secretAccessKey = copyOfForm.secretAccessKey?.replace(/./g, '*');
     copyOfForm.sessionToken = copyOfForm.sessionToken?.replace(/./g, '*');
-    copyOfForm.signedUrl = copyOfForm.signedUrl?.replace(/(Security-Token=)[^&]*/, "$1******");
+    copyOfForm.signedUrl = copyOfForm.signedUrl?.replace(/(Security-Token=)[^&]*/, '$1******');
     console.log('[FORM_VALUES] Running the sample with the following options:', copyOfForm);
 }
 
@@ -283,15 +329,12 @@ $('#wssUrl-button').click(async () => {
     }
     ROLE = 'viewer';
 
-    const localView = $('#viewer .local-view')[0];
-    const remoteView = $('#viewer .remote-view')[0];
-    const localMessage = $('#viewer .local-message')[0];
-    const remoteMessage = $('#viewer .remote-message')[0];
-    const sourceURL = $('#sourceURL').val();
-
     try {
         const formValues = generateObjectFromForm('queryparam-json-row');
         const headerObject = generateObjectFromForm('header-json-row');
+        const remoteMessage = $('#viewer .remote-message')[0];
+        const localMessage = $('#viewer .local-message')[0];
+        const sourceURL = $('#sourceURL').val();
 
         /*
         if (formValues.enableDQPmetrics) {
@@ -308,32 +351,35 @@ $('#wssUrl-button').click(async () => {
         $('#fetchingWssUrl').removeClass('d-none');
         fetch(`${targetUrl}?${query}`, {
             method: 'GET',
-            headers: headerObject
-        }).then(res => {
-            $('#fetchingWssUrl').addClass('d-none');
-            if (res.ok) {
-                return res.json()
-            } else {
-                return Promise.reject(`${res.status}: ${res.statusText}`);
-            }
-            }).then(data => {
+            headers: headerObject,
+        })
+            .then(res => {
+                $('#fetchingWssUrl').addClass('d-none');
+                if (res.ok) {
+                    return res.json();
+                } else {
+                    return Promise.reject(`${res.status}: ${res.statusText}`);
+                }
+            })
+            .then(data => {
+                const localView = $('#viewer .local-view')[0];
+                const remoteView = $('#viewer .remote-view')[0];
                 formValues.clientId = getRandomClientId();
-                
-                //const urlForFrontend = data.wss.replace(/\?/g, '?<br>').replace(/&/g, '&<br>');
-                //$('#retrievedWssUrl').html("Retrieved WSS URL: <br>" + urlForFrontend);
                 formValues.wssUrl = data.wss;
-                console.log("WSS URL: ", data.wss.replace(/(Security-Token=)[^&]*/, "$1******"));
+                console.log('WSS URL: ', data.wss.replace(/(Security-Token=)[^&]*/, '$1******'));
                 formValues.iceServers = data.ice;
-                formValues.sendVideo = true; // Are these something we'd want the user to opt into / out of?  
+                formValues.sendVideo = false;
                 formValues.sendAudio = true;
                 formValues.useTrickleICE = true;
+                printFormValues(formValues);
                 startViewer(localView, remoteView, formValues, onStatsReport, event => {
                     remoteMessage.append(`${event.data}\n`);
                 });
-        }).catch(err => {
-            console.error("ERROR", err)
-        })
-        
+            })
+            .catch(err => {
+                console.error('ERROR', err);
+            });
+
         form.addClass('d-none');
         $('#form').addClass('d-none');
         $('#viewer').removeClass('d-none');
@@ -414,13 +460,13 @@ function addViewerTrackToMaster(viewerId, track) {
         ?.remove();
 
     const container = $(`<div id="${viewerId}"></div>`);
-    const video = $(`<video autoPlay playsInline controls title="${viewerId}"></video>`);
+    const video = $(`<video autoPlay playsInline controls title="${viewerId} width="0" height="20"></video>`);
     video.addClass('remote-view');
 
     const title = $(`<p>${viewerId}</p>`);
 
-    container.append(video);
     container.append(title);
+    container.append(video);
 
     video[0].srcObject = track;
 
@@ -575,10 +621,10 @@ $('#describe-media-storage-configuration-button').on('click', async function() {
     describeMediaStorageConfiguration(formValues);
 });
 
-const headerJsonContainer = $("#header-json-container");
-const headerAddBtn = $("#header-json-add");
+const headerJsonContainer = $('#header-json-container');
+const headerAddBtn = $('#header-json-add');
 
-headerAddBtn.on("click", () => {
+headerAddBtn.on('click', () => {
     const row = $(`<div class="header-json-row">
         <input type="text" placeholder="Key" class="key">
         <input type="text" placeholder="Value" class="value">
@@ -587,14 +633,16 @@ headerAddBtn.on("click", () => {
     headerJsonContainer.append(row);
 });
 
-headerJsonContainer.on("click", ".delete", (e) => {
-    $(e.target).parent().remove();
+headerJsonContainer.on('click', '.delete', e => {
+    $(e.target)
+        .parent()
+        .remove();
 });
 
-const queryParamJsonContainer = $("#queryparam-json-container");
-const queryParamAddBtn = $("#queryparam-json-add");
+const queryParamJsonContainer = $('#queryparam-json-container');
+const queryParamAddBtn = $('#queryparam-json-add');
 
-queryParamAddBtn.on("click", () => {
+queryParamAddBtn.on('click', () => {
     const row = $(`<div class="queryparam-json-row">
         <input type="text" placeholder="Key" class="key">
         <input type="text" placeholder="Value" class="value">
@@ -603,8 +651,10 @@ queryParamAddBtn.on("click", () => {
     queryParamJsonContainer.append(row);
 });
 
-queryParamJsonContainer .on("click", ".delete", (e) => {
-    $(e.target).parent().remove();
+queryParamJsonContainer.on('click', '.delete', e => {
+    $(e.target)
+        .parent()
+        .remove();
 });
 
 // Enable tooltips

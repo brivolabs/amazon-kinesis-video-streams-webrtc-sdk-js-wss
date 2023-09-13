@@ -2,14 +2,8 @@
 
 [![NPM version](https://img.shields.io/npm/v/amazon-kinesis-video-streams-webrtc.svg?style=flat-square)](https://www.npmjs.com/package/amazon-kinesis-video-streams-webrtc)
 [![NPM downloads](https://img.shields.io/npm/dm/amazon-kinesis-video-streams-webrtc.svg?style=flat-square)](https://www.npmjs.com/package/amazon-kinesis-video-streams-webrtc)
-[![NPM version](https://img.shields.io/npm/l/amazon-kinesis-video-streams-webrtc?style=flat-square)](https://www.npmjs.com/package/amazon-kinesis-video-streams-webrtc)
-
-
-[![Build Status](https://img.shields.io/travis/com/awslabs/amazon-kinesis-video-streams-webrtc-sdk-js/master?style=flat-square)](https://travis-ci.com/github/awslabs/amazon-kinesis-video-streams-webrtc-sdk-js)
-[![Build Status](https://img.shields.io/bundlephobia/minzip/amazon-kinesis-video-streams-webrtc?style=flat-square)]()
-[![Coverage Status](https://codecov.io/gh/awslabs/amazon-kinesis-video-streams-webrtc-sdk-js/branch/master/graph/badge.svg)](https://codecov.io/gh/awslabs/amazon-kinesis-video-streams-webrtc-sdk-js)
-[![Known Vulnerabilities](https://img.shields.io/snyk/vulnerabilities/npm/amazon-kinesis-video-streams-webrtc?style=flat-square)](https://snyk.io/test/github/awslabs/amazon-kinesis-video-streams-webrtc-sdk-js?targetFile=package.json)
-
+[![License](https://img.shields.io/npm/l/amazon-kinesis-video-streams-webrtc?style=flat-square)](https://www.npmjs.com/package/amazon-kinesis-video-streams-webrtc)
+[![Minzipped Size](https://img.shields.io/bundlephobia/minzip/amazon-kinesis-video-streams-webrtc?style=flat-square)]()
 
 ## What is Amazon Kinesis Video Streams with WebRTC?
 
@@ -22,7 +16,9 @@ This SDK is intended to be used along side the [AWS SDK for JS](https://github.c
 Note: If you are looking to stream media from a Kinesis Video _Stream_ (different from a Kinesis Video Streams _Signaling Channel_), check out the [Kinesis Video Streams web media viewer](https://github.com/aws-samples/amazon-kinesis-video-streams-media-viewer).
 
 ## Installing
+
 #### In the Browser
+
 To use the SDK in the browser, simply add the following script tag to your HTML pages:
 
 ```html
@@ -34,6 +30,7 @@ The SDK classes are made available in the global window under the `KVSWebRTC` na
 The SDK is also compatible with bundlers like Webpack. Follow the instructions in the next section to install the NodeJS module version for use with your bundler.
 
 #### In NodeJS
+
 The preferred way to install the SDK for NodeJS is to use the npm package manager. Simply type the following into a terminal window:
 
 ```bash
@@ -41,6 +38,7 @@ npm install amazon-kinesis-video-streams-webrtc
 ```
 
 The SDK classes can then be imported like typical NodeJS modules:
+
 ```js
 // JavaScript
 const SignalingClient = require('amazon-kinesis-video-streams-webrtc').SignalingClient;
@@ -50,25 +48,30 @@ import { SignalingClient } from 'amazon-kinesis-video-streams-webrtc';
 ```
 
 ## Getting Started
-You can start by trying out the SDK with a webcam on the example [WebRTC test page](https://awslabs.github.io/amazon-kinesis-video-streams-webrtc-sdk-js/examples/index.html).
+
+You can start by trying out the SDK with a webcam on the example [WebRTC test page](https://brivolabs.github.io/amazon-kinesis-video-streams-webrtc-sdk-js/examples/index.html).
 
 It is also recommended to develop familiarity with the WebRTC protocols and KVS Signaling Channel APIs. See the following resources:
-* [KVS WebRTC Developer Guide](https://docs.aws.amazon.com/kinesisvideostreams-webrtc-dg/latest/devguide/what-is-kvswebrtc.html)
-* [KVS API Reference Guide](https://docs.aws.amazon.com/kinesisvideostreams/latest/dg/API_Operations.html)
+
+-   [KVS WebRTC Developer Guide](https://docs.aws.amazon.com/kinesisvideostreams-webrtc-dg/latest/devguide/what-is-kvswebrtc.html)
+-   [KVS API Reference Guide](https://docs.aws.amazon.com/kinesisvideostreams/latest/dg/API_Operations.html)
 
 The first step in using the SDK in your own application is to follow the [Installing](#installing) instructions above to install the SDK.
 
 From there, see the [Usage](#usage) section below for guidance on using the SDK to build a WebRTC application.
 Also refer to the [`examples`](examples) directory for examples on how to write an end-to-end WebRTC application that uses the SDK.
 
-## Usage
+## BrivoLabs Hosted Page Usage
+
 This section demonstrates how to use this SDK along with the [AWS SDK for JS](https://github.com/aws/aws-sdk-js) (version 2.585.0+) to build a web-based viewer application.
 Refer to the [`examples`](examples) directory for an example of a complete application including both a master and viewer role.
 
 #### Viewer Example With Audio/Video From Local Webcam
+
 These code snippets demonstrate how to build a viewer application that receives audio and video and also sends audio and video from a webcam back to the master.
 
 ##### Set Up Variables
+
 ```js
 // DescribeSignalingChannel API can also be used to get the ARN from a channel name.
 const channelARN = 'arn:aws:kinesisvideo:us-west-2:123456789012:channel/test-channel/1234567890';
@@ -88,6 +91,7 @@ const clientId = 'RANDOM_VALUE';
 See [Managing Credentials](#Managing-Credentials) for more information about managing credentials in a web environment.
 
 ##### Create KVS Client
+
 ```js
 const kinesisVideoClient = new AWS.KinesisVideo({
     region,
@@ -98,7 +102,9 @@ const kinesisVideoClient = new AWS.KinesisVideo({
 ```
 
 ##### Get Signaling Channel Endpoints
+
 Each signaling channel is assigned an HTTPS and WSS endpoint to connect to for data-plane operations. These can be discovered using the `GetSignalingChannelEndpoint` API.
+
 ```js
 const getSignalingChannelEndpointResponse = await kinesisVideoClient
     .getSignalingChannelEndpoint({
@@ -116,7 +122,9 @@ const endpointsByProtocol = getSignalingChannelEndpointResponse.ResourceEndpoint
 ```
 
 ##### Create KVS Signaling Client
+
 The HTTPS endpoint from the `GetSignalingChannelEndpoint` response is used with this client. This client is just used for getting ICE servers, not for actual signaling.
+
 ```js
 const kinesisVideoSignalingChannelsClient = new AWS.KinesisVideoSignalingChannels({
     region,
@@ -128,17 +136,17 @@ const kinesisVideoSignalingChannelsClient = new AWS.KinesisVideoSignalingChannel
 ```
 
 ##### Get ICE server configuration
+
 For best performance, we collect STUN and TURN ICE server configurations. The KVS STUN endpoint is always `stun:stun.kinesisvideo.${region}.amazonaws.com:443`.
 To get TURN servers, the `GetIceServerConfig` API is used.
+
 ```js
 const getIceServerConfigResponse = await kinesisVideoSignalingChannelsClient
     .getIceServerConfig({
         ChannelARN: channelARN,
     })
     .promise();
-const iceServers = [
-    { urls: `stun:stun.kinesisvideo.${region}.amazonaws.com:443` }
-];
+const iceServers = [{ urls: `stun:stun.kinesisvideo.${region}.amazonaws.com:443` }];
 getIceServerConfigResponse.IceServerList.forEach(iceServer =>
     iceServers.push({
         urls: iceServer.Uris,
@@ -149,13 +157,17 @@ getIceServerConfigResponse.IceServerList.forEach(iceServer =>
 ```
 
 ##### Create RTCPeerConnection
+
 The [RTCPeerConnection](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection) is the primary interface for WebRTC communications in the Web.
+
 ```js
 const peerConnection = new RTCPeerConnection({ iceServers });
 ```
 
 ##### Create WebRTC Signaling Client
+
 This is the actual client that is used to send messages over the signaling channel.
+
 ```js
 signalingClient = new KVSWebRTC.SignalingClient({
     channelARN,
@@ -170,7 +182,9 @@ signalingClient = new KVSWebRTC.SignalingClient({
     systemClockOffset: kinesisVideoClient.config.systemClockOffset,
 });
 ```
+
 ##### Add Signaling Client Event Listeners
+
 ```js
 // Once the signaling channel connection is open, connect to the webcam and create an offer to send to the master
 signalingClient.on('open', async () => {
@@ -214,10 +228,10 @@ signalingClient.on('close', () => {
 signalingClient.on('error', error => {
     // Handle client errors
 });
-
 ```
 
 ##### Add Peer Connection Event Listeners
+
 ```js
 // Send any ICE candidates generated by the peer connection to the other peer
 peerConnection.addEventListener('icecandidate', ({ candidate }) => {
@@ -238,95 +252,114 @@ peerConnection.addEventListener('track', event => {
 ```
 
 ##### Open Signaling Connection
+
 ```
 signalingClient.open();
 ```
 
 ## Documentation
+
 This section outlines all of the classes, events, methods, and configuration options for the SDK.
 
 ### Class: `SignalingClient`
+
 This class is the main class for interfacing with the KVS signaling service. It extends `EventEmitter`.
 
 #### Constructor: `new SignalingClient(config)`
-* `config` {object}
-  * `role` {Role} "MASTER" or "VIEWER".
-  * `channelARN` {string} ARN of a channel that exists in the AWS account.
-  * `channelEndpoint` {string} KVS Signaling Service endpoint. Should be the "WSS" endpoint from calling the `GetSignalingChannel` API.
-  * `region` {string} AWS region that the channel exists in.
-  * `clientId` {string} Identifier to uniquely identify this client when connecting to the KVS Signaling Service. Required if the `role` is "VIEWER". A value should not be provided if the `role` is "MASTER".
-  * `credentials` {object} Must be provided unless a `requestSigner` is provided. See [Managing Credentials](#Managing-Credentials).
-    * `accessKeyId` {string} AWS access key id.
-    * `secretAccessKey` {string} AWS secret access key.
-    * `sessionToken` {string} Optional. AWS session token.
-  * `requestSigner` {RequestSigner} Optional. A custom method for overriding the default SigV4 request signing.
-  * `systemClockOffset` {number} Optional. Applies the given offset when setting the date in the SigV4 signature.
-  See [systemClockOffset](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Config.html#systemClockOffset-property) and [correctClockSkew](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Config.html#correctClockSkew-property)
-  properties of the AWS SDK.
+
+-   `config` {object}
+    -   `role` {Role} "MASTER" or "VIEWER".
+    -   `channelARN` {string} ARN of a channel that exists in the AWS account.
+    -   `channelEndpoint` {string} KVS Signaling Service endpoint. Should be the "WSS" endpoint from calling the `GetSignalingChannel` API.
+    -   `region` {string} AWS region that the channel exists in.
+    -   `clientId` {string} Identifier to uniquely identify this client when connecting to the KVS Signaling Service. Required if the `role` is "VIEWER". A value should not be provided if the `role` is "MASTER".
+    -   `credentials` {object} Must be provided unless a `requestSigner` is provided. See [Managing Credentials](#Managing-Credentials).
+        -   `accessKeyId` {string} AWS access key id.
+        -   `secretAccessKey` {string} AWS secret access key.
+        -   `sessionToken` {string} Optional. AWS session token.
+    -   `requestSigner` {RequestSigner} Optional. A custom method for overriding the default SigV4 request signing.
+    -   `systemClockOffset` {number} Optional. Applies the given offset when setting the date in the SigV4 signature.
+        See [systemClockOffset](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Config.html#systemClockOffset-property) and [correctClockSkew](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Config.html#correctClockSkew-property)
+        properties of the AWS SDK.
 
 #### Event: `'open'`
+
 Emitted when the connection to the signaling service is open.
 
 #### Event: `'sdpOffer'`
-* `sdpOffer` {[RTCSessionDescription](https://developer.mozilla.org/en-US/docs/Web/API/RTCSessionDescription)} The SDP offer received from the signaling service.
-* `senderClientId` {string} The client id of the source of the SDP offer. The value will be null if the SDP offer is from the master.
+
+-   `sdpOffer` {[RTCSessionDescription](https://developer.mozilla.org/en-US/docs/Web/API/RTCSessionDescription)} The SDP offer received from the signaling service.
+-   `senderClientId` {string} The client id of the source of the SDP offer. The value will be null if the SDP offer is from the master.
 
 Emitted when a new SDP offer is received over the channel. Typically only a master should receive SDP offers.
 
 #### Event: `'sdpAnswer'`
-* `sdpAnswer` {[RTCSessionDescription](https://developer.mozilla.org/en-US/docs/Web/API/RTCSessionDescription)} The SDP answer received from the signaling service.
-* `senderClientId` {string} The client id of the source of the SDP answer. The value will be null if the SDP answer is from the master.
+
+-   `sdpAnswer` {[RTCSessionDescription](https://developer.mozilla.org/en-US/docs/Web/API/RTCSessionDescription)} The SDP answer received from the signaling service.
+-   `senderClientId` {string} The client id of the source of the SDP answer. The value will be null if the SDP answer is from the master.
 
 Emitted when a new SDP answer is received over the channel. Typically only a viewer should receive SDP answers.
 
 #### Event: `'iceCandidate'`
-* `iceCandidate` {[RTCIceCandidate](https://developer.mozilla.org/en-US/docs/Web/API/RTCIceCandidate)} The ICE candidate received from the signaling service.
-* `senderClientId` {string} The client id of the source of the ICE candidate. The value will be null if the ICE candidate is from the master.
+
+-   `iceCandidate` {[RTCIceCandidate](https://developer.mozilla.org/en-US/docs/Web/API/RTCIceCandidate)} The ICE candidate received from the signaling service.
+-   `senderClientId` {string} The client id of the source of the ICE candidate. The value will be null if the ICE candidate is from the master.
 
 Emitted when a new ICE candidate is received over the channel.
 
 #### Event: `'close'`
+
 Emitted when the connection to the signaling service is closed. Even if there is an error, as long as the connection is closed, this event will be emitted.
 
 #### Event: `'error'`
-* `error` {Error}
+
+-   `error` {Error}
 
 Emitted when there is an error in the client or there is an error received from the signaling service. The connection will be closed automatically.
 
 #### Method: `on(event, callback)`
-* `event` {string} Event name.
-* `callback` {function} Event handler.
+
+-   `event` {string} Event name.
+-   `callback` {function} Event handler.
 
 Binds an event handler.
 
 #### Method: `open()`
+
 Opens a connection to the signaling service. An error will be thrown if there is already another connection open or opening.
 
 #### Method: `close()`
+
 Closes the active connection to the signaling service. Nothing will happen if there is no open connection.
 
 #### Method: `sendSdpOffer(sdpOffer, [recipientClientId])`
-* `sdpOffer` {[RTCSessionDescription](https://developer.mozilla.org/en-US/docs/Web/API/RTCSessionDescription)} SDP offer to send to the recipient client.
-* `recipientClientId` {string} The id of the client to send the SDP offer to. If no id is provided, it will be sent to the master.
+
+-   `sdpOffer` {[RTCSessionDescription](https://developer.mozilla.org/en-US/docs/Web/API/RTCSessionDescription)} SDP offer to send to the recipient client.
+-   `recipientClientId` {string} The id of the client to send the SDP offer to. If no id is provided, it will be sent to the master.
 
 #### Method: `sendSdpAnswer(sdpAnswer, [recipientClientId])`
-* `sdpAnswer` {[RTCSessionDescription](https://developer.mozilla.org/en-US/docs/Web/API/RTCSessionDescription)} SDP answer to send to the recipient client.
-* `recipientClientId` {string} The id of the client to send the SDP answer to. If no id is provided, it will be sent to the master.
+
+-   `sdpAnswer` {[RTCSessionDescription](https://developer.mozilla.org/en-US/docs/Web/API/RTCSessionDescription)} SDP answer to send to the recipient client.
+-   `recipientClientId` {string} The id of the client to send the SDP answer to. If no id is provided, it will be sent to the master.
 
 #### Method: `sendIceCandidate(iceCandidate, [recipientClientId])`
-* `iceCandidate` {[RTCIceCandidate](https://developer.mozilla.org/en-US/docs/Web/API/RTCIceCandidate)} ICE candidate to send to the recipient client.
-* `recipientClientId` {string} The id of the client to send the ICE candidate to. If no id is provided, it will be sent to the master.
+
+-   `iceCandidate` {[RTCIceCandidate](https://developer.mozilla.org/en-US/docs/Web/API/RTCIceCandidate)} ICE candidate to send to the recipient client.
+-   `recipientClientId` {string} The id of the client to send the ICE candidate to. If no id is provided, it will be sent to the master.
 
 ### Interface: `RequestSigner`
+
 Interface for signing HTTP and WebSocket requests.
 
 #### Method: `getSignedURL(endpoint, queryParams, [date]) => Promise<string>`
-* `endpoint` {string} The endpoint of the URL (including protocol, host, and path).
-* `queryParams` {object} The query parameters to include in the signed URL.
-* `date` {Date} The date that the signature is valid (+/- 5 minutes). Default: now.
-* `return` {Promise<string>} The signed URL.
+
+-   `endpoint` {string} The endpoint of the URL (including protocol, host, and path).
+-   `queryParams` {object} The query parameters to include in the signed URL.
+-   `date` {Date} The date that the signature is valid (+/- 5 minutes). Default: now.
+-   `return` {Promise`<string>`} The signed URL.
 
 ### Class: `SigV4RequestSigner`
+
 This class is used to SigV4 sign requests to the signaling service. It implements `RequestSigner`.
 
 This signer is unique from the signers included in the AWS SDK for JS because it supports signing WebSocket requests.
@@ -335,23 +368,28 @@ This is a useful class to use in a NodeJS backend to sign requests and send them
 to have AWS credentials.
 
 #### Constructor: `new SigV4RequestSigner(region, credentials, [service])`
-* `region` {string} The region used for signing.
-* `credentials` {Credentials} The credentials to used for signing.
-* `service` {string} The service name used for signing. Default: `kinesisvideo`.
+
+-   `region` {string} The region used for signing.
+-   `credentials` {Credentials} The credentials to used for signing.
+-   `service` {string} The service name used for signing. Default: `kinesisvideo`.
 
 #### Method: `getSignedURL(endpoint, queryParams, [date]) => Promise<string>`
+
 Implementation of interface method.
-* Uses the SigV4 signing mechanism.
-* Supports credentials with and without a session token.
-* Only supports the `wss://` protocol.
-* Does not support specifying an expiration.
+
+-   Uses the SigV4 signing mechanism.
+-   Supports credentials with and without a session token.
+-   Only supports the `wss://` protocol.
+-   Does not support specifying an expiration.
 
 If the signer's credentials support refreshing, they will be be refreshed if necessary before signing.
 
 ### Enum: `Role`
+
 An enum with the following values:
-* `MASTER`
-* `VIEWER`
+
+-   `MASTER`
+-   `VIEWER`
 
 ## Compatibility
 
@@ -366,9 +404,10 @@ To increase WebRTC API compatibility between different browsers, it's highly rec
 Following is a quote from [adapter.js docs](https://github.com/webrtcHacks/adapter):
 
 > adapter.js is a shim to insulate apps from spec changes and prefix differences in WebRTC.
-  The prefix differences are mostly gone these days but differences in behaviour between browsers remain.
+> The prefix differences are mostly gone these days but differences in behaviour between browsers remain.
 
 ## Managing Credentials
+
 The `SignalingClient` requires a SigV4 signed URL in order to make requests to the KVS signaling service backend.
 The client can either be provided with AWS credentials (and then it will use those to sign requests) or it can be
 provided with a custom `RequestSigner` that can perform the request signing.
@@ -381,23 +420,25 @@ that uses AWS credentials to create a signed request for the KVS WebRTC Signalin
 Note that you will also have to get other data, such as the ICE server config, on the backend and send that to the client.
 
 ### IAM Permissions
+
 Regardless of the mechanism used to manage the credentials, the credentials will need to have permissions to perform KVS operations. The following is an example policy for a viewer of a particular channel:
+
 ```json
 {
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "kvsViewerPolicy",
-      "Action": [
-        "kinesisvideo:ConnectAsViewer", // Use "kinesisvideo:ConnectAsMaster" for master policy instead.
-        "kinesisvideo:DescribeSignalingChannel",
-        "kinesisvideo:GetIceServerConfig",
-        "kinesisvideo:GetSignalingChannelEndpoint"
-      ],
-      "Effect": "Allow",
-      "Resource": "arn:aws:kinesisvideo:<region>:<account_ID>:channel/<channelName>/<creationTime>"
-    }
-  ]
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "kvsViewerPolicy",
+            "Action": [
+                "kinesisvideo:ConnectAsViewer", // Use "kinesisvideo:ConnectAsMaster" for master policy instead.
+                "kinesisvideo:DescribeSignalingChannel",
+                "kinesisvideo:GetIceServerConfig",
+                "kinesisvideo:GetSignalingChannelEndpoint"
+            ],
+            "Effect": "Allow",
+            "Resource": "arn:aws:kinesisvideo:<region>:<account_ID>:channel/<channelName>/<creationTime>"
+        }
+    ]
 }
 ```
 
@@ -406,13 +447,14 @@ See [KVS WebRTC Access Control Documentation](https://docs.aws.amazon.com/kinesi
 ## Development
 
 #### Running WebRTC Test Page Locally
+
 The SDK and test page can be edited and run locally by following these instructions:
 
 NodeJS version 16+ is required.
 
 1. Run `npm install` to download dependencies.
-1. Run `npm run develop` to run the webserver.
-1. Open the WebRTC test page at `http://localhost:3001`
+2. Run `npm run develop` to run the webserver.
+3. Open the WebRTC test page at `http://localhost:3001`
 
 You will need to provide an AWS region, AWS credentials, and a Channel Name.
 

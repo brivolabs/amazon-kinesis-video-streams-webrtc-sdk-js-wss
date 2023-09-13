@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>KVS WebRTC Test Page</title>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" />
+        <link rel="stylesheet" href="loader.css" />
+        <link rel="stylesheet" href="./app.css" />
+        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
+        <script src="aws-sdk-2.1363.0.min.js"></script>
+        <script src="https://unpkg.com/@ungap/url-search-params"></script>
+        <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js"></script>
+        <link rel="icon" type="image/png" href="favicon.ico" />
+    </head>
+    <body>
+        <h1>BDS Simulator</h1>
+        <p>This page is to simulate the Brivo Door Station Hardware.</p>
+        <div class="container mt-3">
+            <hr />
+            <div class="row loader"></div>
+            <div id="main" class="d-none">
+                <form id="form" onsubmit="return false">
+                    <h4>KVS Endpoint</h4>
+                    <div class="form-group has-validation" style="position: relative;">
+                        <label for="region">Region</label>
+                        <input type="text" class="form-control valid" id="region" placeholder="Region" value="us-east-1" autocomplete="off" required />
+                        <datalist id="regionList"></datalist>
+                        <div id="region-invalid-feedback" class="invalid-feedback"></div>
+                    </div>
+                    <h4>AWS Credentials</h4>
+                    <div class="form-group">
+                        <label for="accessKeyId">Access Key ID</label>
+                        <input type="text" class="form-control" id="accessKeyId" placeholder="Access key id" autocomplete="off" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="secretAccessKey">Secret Access Key</label>
+                        <input type="password" class="form-control" id="secretAccessKey" placeholder="Secret access key" autocomplete="off" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="sessionToken">Session Token <small>(optional)</small></label>
+                        <input type="password" class="form-control" id="sessionToken" placeholder="Session token" autocomplete="off" />
+                    </div>
+                    <div>
+                        <label for="channelName">Serial Number <small>Will be used as the ARN channel name</small> </label>
+                        <div class="form-group input-group">
+                            <input type="text" class="form-control" id="channelName" placeholder="Serial Number" value="test-device" required />
+                            <div class="input-group-append"></div>
+                        </div>
+                    </div>
+
+                    <hr />
+                    <div class="row">
+                        <div class="col">
+                            <button id="bds-button-no-notify" type="submit" class="btn btn-primary">Simulate Button Press, No Notification</button>
+                        </div>
+                        <div class="col">
+                            <button id="bds-button-with-notify" type="submit" class="btn btn-primary">Simulate Button Press With Notification</button>
+                        </div>
+                    </div>
+                </form>
+
+                <div id="master" class="d-none">
+                    <h2>Master</h2>
+                    <div class="row">
+                        <div>
+                            <h5>Master Section</h5>
+                            <div class="video-container"><video class="local-view" autoplay playsinline controls muted height="360"></video></div>
+                            <div id="viewer-view-holder" class="col"></div>
+                        </div>
+                    </div>
+                    <div class="row datachannel">
+                        <div class="col">
+                            <div class="form-group">
+                                <textarea type="text" class="form-control local-message" placeholder="DataChannel message to send to all viewers"> </textarea>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="card bg-light mb-3">
+                                <pre class="remote-message card-body text-monospace preserve-whitespace"></pre>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <button id="stop-master-button" type="button" class="btn btn-primary">Stop Master</button>
+                    </div>
+                </div>
+
+                <h3 id="logs-header">Logs</h3>
+                <div class="card bg-light mb-3">
+                    <div style="display: flex; justify-content: space-between;">
+                        <div id="tabs">
+                            <button id="debug-button" class="btn btn-light" onClick="logLevelSelected(event)" data-level="DEBUG">DEBUG</button>
+                            <button id="info-button" class="btn btn-primary" onClick="logLevelSelected(event)" data-level="INFO">INFO</button>
+                            <button id="warn-button" class="btn btn-light" onClick="logLevelSelected(event)" data-level="WARN">WARN</button>
+                            <button id="error-button" class="btn btn-light" onClick="logLevelSelected(event)" data-level="ERROR">ERROR</button>
+                        </div>
+                        <div class="d-inline-flex">
+                            <button id="more-logs" class="btn btn-light" title="Show more logs">+</button>
+                            <button id="less-logs" class="btn btn-light" title="Show less logs">-</button>
+                            <button id="clear-logs" class="btn btn-light">Clear Logs</button>
+                            <div>
+                                <button id="copy-logs" class="btn btn-light" title="Copy logs">
+                                    <span
+                                        id="copy-tooltip"
+                                        aria-live="assertive"
+                                        class="text-info"
+                                        role="tooltip"
+                                        data-position="auto"
+                                        title="Copied logs to clipboard!"
+                                        >📋</span
+                                    >
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <pre id="logs" class="card-body text-monospace preserve-whitespace"></pre>
+                </div>
+            </div>
+        </div>
+
+        <div id="test"></div>
+
+        <script src="https://unpkg.com/amazon-kinesis-video-streams-webrtc/dist/kvs-webrtc.min.js"></script>
+        <script src="./master.js"></script>
+        <script src="./viewer.js"></script>
+        <script src="./createSignalingChannel.js"></script>
+        <script src="./listStorageChannels.js"></script>
+        <script src="./updateMediaStorageConfiguration.js"></script>
+        <script src="./describeMediaStorageConfiguration.js"></script>
+        <script src="./app.js"></script>
+    </body>
+</html>
